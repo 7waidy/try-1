@@ -1,0 +1,3954 @@
+```index.tsx
+import './index.css'
+import React from "react";
+import { render } from "react-dom";
+import { App } from "./App";
+
+render(<App />, document.getElementById("root"));
+
+```
+```App.tsx
+import React, { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Page01Splash } from './components/pages/Page01Splash'
+import { Page02Origin } from './components/pages/Page02Origin'
+import { Page03Origin } from './components/pages/Page03Origin'
+import { Page04FirstDate } from './components/pages/Page04FirstDate'
+import { Page05FirstDate } from './components/pages/Page05FirstDate'
+import { Page06Villain } from './components/pages/Page06Villain'
+import { Page07Villain } from './components/pages/Page07Villain'
+import { Page08TeamUp } from './components/pages/Page08TeamUp'
+import { Page09TeamUp } from './components/pages/Page09TeamUp'
+import { Page10Reveal } from './components/pages/Page10Reveal'
+import { Page11Reveal } from './components/pages/Page11Reveal'
+import { Page12Final } from './components/pages/Page12Final'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+export function App() {
+  const [currentPage, setCurrentPage] = useState(0)
+  const [direction, setDirection] = useState(1)
+  // CUSTOMIZE: Replace with your girlfriend's name
+  const girlfriendName = '[Fadma]'
+  const pages = [
+    <Page01Splash girlfriendName={girlfriendName} />,
+    <Page02Origin />,
+    <Page03Origin />,
+    <Page04FirstDate />,
+    <Page05FirstDate />,
+    <Page06Villain />,
+    <Page07Villain />,
+    <Page08TeamUp />,
+    <Page09TeamUp />,
+    <Page10Reveal />,
+    <Page11Reveal />,
+    <Page12Final girlfriendName={girlfriendName} />,
+  ]
+  const goToNextPage = () => {
+    if (currentPage < pages.length - 1) {
+      setDirection(1)
+      setCurrentPage(currentPage + 1)
+    } else {
+      // Restart from beginning
+      setDirection(1)
+      setCurrentPage(0)
+    }
+  }
+  const goToPrevPage = () => {
+    if (currentPage > 0) {
+      setDirection(-1)
+      setCurrentPage(currentPage - 1)
+    }
+  }
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault()
+        goToNextPage()
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        goToPrevPage()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [currentPage])
+  // Touch/swipe support
+  useEffect(() => {
+    let touchStartX = 0
+    let touchEndX = 0
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.changedTouches[0].screenX
+    }
+    const handleTouchEnd = (e: TouchEvent) => {
+      touchEndX = e.changedTouches[0].screenX
+      handleSwipe()
+    }
+    const handleSwipe = () => {
+      if (touchStartX - touchEndX > 50) {
+        // Swipe left - next page
+        goToNextPage()
+      }
+      if (touchEndX - touchStartX > 50) {
+        // Swipe right - previous page
+        goToPrevPage()
+      }
+    }
+    window.addEventListener('touchstart', handleTouchStart)
+    window.addEventListener('touchend', handleTouchEnd)
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [currentPage])
+  const pageVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? '100%' : '-100%',
+      opacity: 0,
+      scale: 0.95,
+      rotateY: direction > 0 ? 10 : -10,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      rotateY: 0,
+    },
+    exit: (direction: number) => ({
+      x: direction > 0 ? '-100%' : '100%',
+      opacity: 0,
+      scale: 0.95,
+      rotateY: direction > 0 ? -10 : 10,
+    }),
+  }
+  return (
+    <div className="w-full min-h-screen bg-black overflow-hidden relative">
+      {/* Main page content */}
+      <div className="w-full h-screen cursor-pointer" onClick={goToNextPage}>
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={currentPage}
+            custom={direction}
+            variants={pageVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: {
+                type: 'spring',
+                stiffness: 300,
+                damping: 30,
+              },
+              opacity: {
+                duration: 0.3,
+              },
+              scale: {
+                duration: 0.3,
+              },
+              rotateY: {
+                duration: 0.4,
+              },
+            }}
+            className="w-full h-full"
+            style={{
+              perspective: '1000px',
+            }}
+          >
+            {pages[currentPage]}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Page counter */}
+      <motion.div
+        initial={{
+          opacity: 0,
+        }}
+        animate={{
+          opacity: 1,
+        }}
+        transition={{
+          delay: 1,
+        }}
+        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+      >
+        <div className="comic-border bg-black text-yellow-300 px-6 py-2">
+          <p className="font-['Bangers'] text-xl">
+            PAGE {currentPage + 1} / {pages.length}
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Navigation buttons (desktop) */}
+      <div className="hidden md:block">
+        {currentPage > 0 && (
+          <motion.button
+            initial={{
+              opacity: 0,
+              x: -20,
+            }}
+            animate={{
+              opacity: 1,
+              x: 0,
+            }}
+            onClick={(e) => {
+              e.stopPropagation()
+              goToPrevPage()
+            }}
+            className="fixed left-4 top-1/2 -translate-y-1/2 z-50 comic-border bg-yellow-400 p-4 hover:bg-yellow-300 transition-colors"
+            whileHover={{
+              scale: 1.1,
+            }}
+            whileTap={{
+              scale: 0.9,
+            }}
+          >
+            <ChevronLeft className="w-8 h-8 text-black" />
+          </motion.button>
+        )}
+
+        <motion.button
+          initial={{
+            opacity: 0,
+            x: 20,
+          }}
+          animate={{
+            opacity: 1,
+            x: 0,
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+            goToNextPage()
+          }}
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 comic-border bg-yellow-400 p-4 hover:bg-yellow-300 transition-colors"
+          whileHover={{
+            scale: 1.1,
+          }}
+          whileTap={{
+            scale: 0.9,
+          }}
+        >
+          <ChevronRight className="w-8 h-8 text-black" />
+        </motion.button>
+      </div>
+
+      {/* Instructions (fade out after first page) */}
+      {currentPage === 0 && (
+        <motion.div
+          initial={{
+            opacity: 0,
+          }}
+          animate={{
+            opacity: 1,
+          }}
+          exit={{
+            opacity: 0,
+          }}
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
+        >
+          <div className="bg-black/80 text-white px-6 py-3 rounded-lg border-2 border-yellow-400">
+            <p className="font-['Bangers'] text-sm text-center">
+              Click anywhere • Arrow keys • Swipe to navigate
+            </p>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
+```
+```tailwind.config.js
+export default {}
+```
+```index.css
+/* URL IMPORTS (SUCH AS FONT IMPORTS) SHOULD BE KEPT ABOVE TAILWIND IMPORTS - DO NOT DELETE THIS COMMENT */
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Bungee&family=Permanent+Marker&display=swap');
+
+/* PLEASE NOTE: THESE TAILWIND IMPORTS SHOULD NEVER BE DELETED - DO NOT DELETE THIS COMMENT */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+/* DO NOT DELETE THESE TAILWIND IMPORTS, OTHERWISE THE STYLING WILL NOT RENDER AT ALL - DO NOT DELETE THIS COMMENT */
+
+@layer utilities {
+  /* Comic book specific styles */
+  .comic-font {
+    font-family: 'Bangers', 'Comic Sans MS', cursive;
+  }
+  
+  .comic-border {
+    border: 5px solid #000000;
+    box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Ben-Day dots halftone pattern */
+  .halftone-pattern {
+    background-image: radial-gradient(circle, #000000 1px, transparent 1px);
+    background-size: 4px 4px;
+    background-position: 0 0, 2px 2px;
+  }
+  
+  .halftone-yellow {
+    background-image: radial-gradient(circle, #FFD700 1.5px, transparent 1.5px);
+    background-size: 6px 6px;
+  }
+  
+  .halftone-red {
+    background-image: radial-gradient(circle, #FF0000 1.5px, transparent 1.5px);
+    background-size: 6px 6px;
+  }
+  
+  .halftone-blue {
+    background-image: radial-gradient(circle, #0066FF 1.5px, transparent 1.5px);
+    background-size: 6px 6px;
+  }
+  
+  /* Starburst effect for sound effects */
+  .starburst {
+    position: relative;
+    background: radial-gradient(circle, currentColor 0%, currentColor 100%);
+    clip-path: polygon(
+      50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%
+    );
+  }
+  
+  /* Comic panel styles */
+  .comic-panel {
+    position: relative;
+    background: white;
+    border: 4px solid black;
+    box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Text stroke for comic text */
+  .text-stroke-black {
+    -webkit-text-stroke: 2px black;
+    paint-order: stroke fill;
+  }
+  
+  .text-stroke-white {
+    -webkit-text-stroke: 2px white;
+    paint-order: stroke fill;
+  }
+  
+  /* Speech bubble tail */
+  .speech-tail::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 30px;
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-top: 20px solid white;
+    filter: drop-shadow(2px 2px 0px black);
+  }
+  
+  /* Thought bubble circles */
+  .thought-circles::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: 20px;
+    width: 12px;
+    height: 12px;
+    background: white;
+    border: 2px solid black;
+    border-radius: 50%;
+    box-shadow: -15px 10px 0 -4px white, -15px 10px 0 -2px black;
+  }
+  
+  /* Page turn animation helper */
+  .page-turn {
+    transform-origin: left center;
+  }
+}
+
+/* Legacy styles from detective theme - keeping for compatibility */
+@layer utilities {
+  .paper-texture {
+    background-color: #E8DCC4;
+    background-image: 
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px),
+      repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px);
+  }
+  
+  .manila-folder {
+    background-color: #D4B896;
+    background-image: 
+      linear-gradient(90deg, rgba(139,115,85,0.1) 1px, transparent 1px),
+      linear-gradient(rgba(139,115,85,0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  
+  .noir-vignette {
+    box-shadow: inset 0 0 200px rgba(0,0,0,0.5);
+  }
+  
+  .typewriter-text {
+    font-family: 'Courier Prime', monospace;
+    letter-spacing: 0.05em;
+  }
+  
+  .handwritten-text {
+    font-family: 'Special Elite', cursive;
+  }
+}
+```
+```components/ComicEffect.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+interface ComicEffectProps {
+  text: string
+  color: 'red' | 'yellow' | 'blue'
+  show: boolean
+}
+export function ComicEffect({ text, color, show }: ComicEffectProps) {
+  const colorClasses = {
+    red: 'text-red-500 border-red-600',
+    yellow: 'text-yellow-400 border-yellow-500',
+    blue: 'text-blue-500 border-blue-600',
+  }
+  if (!show) return null
+  return (
+    <motion.div
+      initial={{
+        scale: 0,
+        rotate: -15,
+        opacity: 0,
+      }}
+      animate={{
+        scale: 1,
+        rotate: 0,
+        opacity: 1,
+      }}
+      transition={{
+        type: 'spring',
+        stiffness: 300,
+        damping: 15,
+        duration: 0.5,
+      }}
+      className="absolute -top-6 -right-6 z-10"
+    >
+      <div
+        className={`starburst ${colorClasses[color]} w-24 h-24 flex items-center justify-center`}
+      >
+        <span
+          className="font-['Bangers'] text-3xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] relative z-10"
+          style={{
+            WebkitTextStroke: '2px black',
+            paintOrder: 'stroke fill',
+          }}
+        >
+          {text}
+        </span>
+      </div>
+    </motion.div>
+  )
+}
+
+```
+```components/ComicPanel.tsx
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import { ComicEffect } from './ComicEffect'
+interface ComicPanelProps {
+  title: string
+  teaserText: string
+  revealText: string
+  backgroundColor: string
+  effect: {
+    text: string
+    color: 'red' | 'yellow' | 'blue'
+  }
+  delay?: number
+}
+export function ComicPanel({
+  title,
+  teaserText,
+  revealText,
+  backgroundColor,
+  effect,
+  delay = 0,
+}: ComicPanelProps) {
+  const [isRevealed, setIsRevealed] = useState(false)
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 50,
+        rotate: -2,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        rotate: 0,
+      }}
+      transition={{
+        delay,
+        type: 'spring',
+        stiffness: 100,
+        damping: 15,
+      }}
+      className="relative"
+    >
+      <motion.button
+        onClick={() => setIsRevealed(!isRevealed)}
+        whileHover={{
+          scale: 1.02,
+        }}
+        whileTap={{
+          scale: 0.98,
+        }}
+        className={`comic-border ${backgroundColor} p-6 w-full h-full min-h-[280px] cursor-pointer relative overflow-hidden transition-all`}
+      >
+        <ComicEffect
+          text={effect.text}
+          color={effect.color}
+          show={isRevealed}
+        />
+
+        {/* Title banner */}
+        <div className="absolute top-0 left-0 right-0 bg-black text-yellow-300 py-2 px-4 border-b-4 border-white">
+          <h2 className="font-['Bangers'] text-2xl text-center tracking-wider">
+            {title}
+          </h2>
+        </div>
+
+        {/* Content area */}
+        <div className="mt-12 flex flex-col items-center justify-center text-center space-y-4">
+          <motion.div
+            initial={false}
+            animate={{
+              opacity: isRevealed ? 0 : 1,
+              scale: isRevealed ? 0.8 : 1,
+            }}
+            transition={{
+              duration: 0.3,
+            }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <p className="font-['Bungee'] text-xl leading-relaxed">
+              {teaserText}
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={false}
+            animate={{
+              opacity: isRevealed ? 1 : 0,
+              scale: isRevealed ? 1 : 0.8,
+            }}
+            transition={{
+              duration: 0.3,
+              delay: 0.1,
+            }}
+            className="absolute inset-0 flex items-center justify-center p-8"
+          >
+            <div className="space-y-4">
+              <p className="font-bold text-lg leading-relaxed">{revealText}</p>
+              <div className="inline-block bg-white px-4 py-2 rotate-2 border-4 border-black">
+                <p className="font-['Bangers'] text-sm">
+                  {isRevealed ? 'CLICK AGAIN!' : ''}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Halftone overlay */}
+        <div className="absolute inset-0 halftone-pattern opacity-20 pointer-events-none" />
+      </motion.button>
+    </motion.div>
+  )
+}
+
+```
+```components/Stamp.tsx
+import React from 'react'
+interface StampProps {
+  text: string
+  rotation?: number
+  color?: 'red' | 'black' | 'blue'
+  size?: 'sm' | 'md' | 'lg'
+}
+export function Stamp({
+  text,
+  rotation = 0,
+  color = 'red',
+  size = 'md',
+}: StampProps) {
+  const colorClasses = {
+    red: 'border-red-600 text-red-600',
+    black: 'border-black text-black',
+    blue: 'border-blue-600 text-blue-600',
+  }
+  const sizeClasses = {
+    sm: 'text-xs px-2 py-1 border-2',
+    md: 'text-sm px-3 py-1.5 border-[3px]',
+    lg: 'text-base px-4 py-2 border-4',
+  }
+  return (
+    <div
+      className={`inline-block ${colorClasses[color]} ${sizeClasses[size]} font-bold tracking-widest uppercase opacity-60`}
+      style={{
+        transform: `rotate(${rotation}deg)`,
+        fontFamily: 'Courier Prime, monospace',
+      }}
+    >
+      {text}
+    </div>
+  )
+}
+
+```
+```components/EvidencePhoto.tsx
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+interface EvidencePhotoProps {
+  label: string
+  note?: string
+  rotation?: number
+}
+export function EvidencePhoto({
+  label,
+  note,
+  rotation = 0,
+}: EvidencePhotoProps) {
+  const [isFlipped, setIsFlipped] = useState(false)
+  return (
+    <motion.div
+      className="cursor-pointer"
+      style={{
+        rotate: rotation,
+      }}
+      whileHover={{
+        scale: 1.05,
+      }}
+      onClick={() => setIsFlipped(!isFlipped)}
+    >
+      <motion.div
+        className="relative"
+        animate={{
+          rotateY: isFlipped ? 180 : 0,
+        }}
+        transition={{
+          duration: 0.6,
+        }}
+        style={{
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        {/* Front of polaroid */}
+        <div
+          className="bg-white p-3 shadow-lg"
+          style={{
+            backfaceVisibility: 'hidden',
+            width: '200px',
+          }}
+        >
+          <div className="bg-gray-300 aspect-square mb-3 flex items-center justify-center">
+            <span className="text-gray-500 text-sm typewriter-text">
+              [PHOTO]
+            </span>
+          </div>
+          <p className="text-center text-xs handwritten-text text-gray-700">
+            {label}
+          </p>
+        </div>
+
+        {/* Back of polaroid */}
+        {note && (
+          <div
+            className="absolute inset-0 bg-white p-4 shadow-lg flex items-center justify-center"
+            style={{
+              backfaceVisibility: 'hidden',
+              transform: 'rotateY(180deg)',
+            }}
+          >
+            <p className="handwritten-text text-sm text-gray-800 text-center">
+              {note}
+            </p>
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
+  )
+}
+
+```
+```components/DetectiveNote.tsx
+import React from 'react'
+interface DetectiveNoteProps {
+  children: React.ReactNode
+  pinned?: boolean
+}
+export function DetectiveNote({
+  children,
+  pinned = false,
+}: DetectiveNoteProps) {
+  return (
+    <div className="relative">
+      {pinned && (
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-red-600 rounded-full shadow-md z-10" />
+      )}
+      <div className="bg-yellow-100 p-4 shadow-md border-l-4 border-yellow-400">
+        <div className="handwritten-text text-sm text-gray-800">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+```
+```components/CaseFileCover.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { Stamp } from './Stamp'
+interface CaseFileCoverProps {
+  onNext: () => void
+}
+export function CaseFileCover({ onNext }: CaseFileCoverProps) {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+      }}
+      animate={{
+        opacity: 1,
+      }}
+      exit={{
+        opacity: 0,
+      }}
+      className="min-h-screen w-full flex items-center justify-center p-8 noir-vignette"
+      style={{
+        background: 'linear-gradient(to bottom, #1a1a1a 0%, #2d2d2d 100%)',
+      }}
+    >
+      <motion.div
+        initial={{
+          scale: 0.9,
+          y: 20,
+        }}
+        animate={{
+          scale: 1,
+          y: 0,
+        }}
+        transition={{
+          delay: 0.2,
+          duration: 0.6,
+        }}
+        className="manila-folder p-12 max-w-2xl w-full shadow-2xl relative coffee-stain"
+        style={{
+          transform: 'rotate(-1deg)',
+        }}
+      >
+        {/* Top stamps */}
+        <div className="absolute top-8 right-12">
+          <Stamp text="CLASSIFIED" rotation={15} color="red" size="lg" />
+        </div>
+
+        <div className="absolute top-20 left-12">
+          <Stamp text="CONFIDENTIAL" rotation={-8} color="black" size="md" />
+        </div>
+
+        {/* Case number */}
+        <div className="text-center mb-8">
+          <p className="typewriter-text text-sm text-gray-700 mb-2">
+            GOTHAM CITY POLICE DEPARTMENT
+          </p>
+          <p className="typewriter-text text-xs text-gray-600">
+            DETECTIVE DIVISION - CASE FILE
+          </p>
+        </div>
+
+        {/* Main title */}
+        <div className="border-4 border-black p-8 bg-white mb-8">
+          <h1 className="typewriter-text text-4xl font-bold text-center mb-4">
+            THE CASE OF
+          </h1>
+          <h2 className="typewriter-text text-5xl font-bold text-center text-red-600 mb-6">
+            [Fadma]
+          </h2>
+          <div className="border-t-2 border-black pt-4">
+            <p className="typewriter-text text-sm text-center text-gray-700">
+              Case No: LOVE-2024-001
+            </p>
+            <p className="typewriter-text text-sm text-center text-gray-700">
+              Lead Detective: [Your Name]
+            </p>
+            <p className="typewriter-text text-sm text-center text-gray-700">
+              Status: ONGOING INVESTIGATION
+            </p>
+          </div>
+        </div>
+
+        {/* Warning label */}
+        <div className="bg-yellow-100 border-l-4 border-yellow-600 p-4 mb-8">
+          <p className="typewriter-text text-xs text-gray-800">
+            ⚠️ WARNING: This case file contains highly sensitive romantic
+            evidence. Proceed with caution. Side effects may include: smiling,
+            blushing, and feeling incredibly loved.
+          </p>
+        </div>
+
+        {/* Bottom stamp */}
+        <div className="absolute bottom-12 right-16">
+          <Stamp
+            text="EVIDENCE ENCLOSED"
+            rotation={-12}
+            color="blue"
+            size="md"
+          />
+        </div>
+
+        {/* Continue button */}
+        <motion.button
+          onClick={onNext}
+          className="w-full bg-black text-white py-4 typewriter-text font-bold text-lg hover:bg-gray-800 transition-colors"
+          whileHover={{
+            scale: 1.02,
+          }}
+          whileTap={{
+            scale: 0.98,
+          }}
+        >
+          OPEN CASE FILE →
+        </motion.button>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+```
+```components/FirstDateCase.tsx
+import React, { memo } from 'react'
+import { motion } from 'framer-motion'
+import { EvidencePhoto } from './EvidencePhoto'
+import { DetectiveNote } from './DetectiveNote'
+import { Stamp } from './Stamp'
+interface FirstDateCaseProps {
+  onNext: () => void
+  onPrev: () => void
+}
+export function FirstDateCase({ onNext, onPrev }: FirstDateCaseProps) {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        x: 100,
+      }}
+      animate={{
+        opacity: 1,
+        x: 0,
+      }}
+      exit={{
+        opacity: 0,
+        x: -100,
+      }}
+      className="min-h-screen w-full p-8 paper-texture"
+    >
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 relative">
+          <div className="absolute top-0 right-0">
+            <Stamp text="EVIDENCE #001" rotation={5} color="red" />
+          </div>
+          <h1 className="typewriter-text text-4xl font-bold mb-2">
+            CASE FILE: FIRST DATE
+          </h1>
+          <div className="h-1 w-32 bg-black mb-4" />
+          <p className="typewriter-text text-sm text-gray-700">
+            Date of Incident: [Your First Date]
+            <br />
+            Location: [Where You Met]
+            <br />
+            Status: UNFORGETTABLE
+          </p>
+        </div>
+
+        {/* Evidence board */}
+        <div className="bg-gray-800 p-8 mb-8 relative">
+          <div className="absolute top-4 left-4">
+            <Stamp text="EVIDENCE" rotation={-5} color="red" size="sm" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+            <EvidencePhoto
+              label="The moment we met"
+              note="I knew right away you were special ❤️"
+              rotation={-3}
+            />
+            <EvidencePhoto
+              label="First conversation"
+              note="Time stopped. The world faded. Just us."
+              rotation={2}
+            />
+            <EvidencePhoto
+              label="The goodbye"
+              note="I didn't want it to end..."
+              rotation={-4}
+            />
+          </div>
+        </div>
+
+        {/* Detective notes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>OBSERVATION:</strong>
+            </p>
+            <p>
+              Subject displayed extraordinary charm, wit, and beauty. Detective
+              found himself completely captivated.
+            </p>
+          </DetectiveNote>
+
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>KEY EVIDENCE:</strong>
+            </p>
+            <p>
+              Your smile. Your laugh. The way you [specific thing she did].
+              These details are permanently filed in my memory.
+            </p>
+          </DetectiveNote>
+        </div>
+
+        {/* Timeline */}
+        <div className="bg-white p-6 border-2 border-black mb-8">
+          <h3 className="typewriter-text font-bold text-xl mb-4">
+            TIMELINE OF EVENTS
+          </h3>
+          <div className="space-y-3 typewriter-text text-sm">
+            <div className="flex gap-4">
+              <span className="font-bold min-w-24">[Time]:</span>
+              <span>First saw you - heart rate increased significantly</span>
+            </div>
+            <div className="flex gap-4">
+              <span className="font-bold min-w-24">[Time]:</span>
+              <span>First words exchanged - nervousness detected</span>
+            </div>
+            <div className="flex gap-4">
+              <span className="font-bold min-w-24">[Time]:</span>
+              <span>Realized this was something special</span>
+            </div>
+            <div className="flex gap-4">
+              <span className="font-bold min-w-24">[Time]:</span>
+              <span>Didn't want the night to end</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between">
+          <motion.button
+            onClick={onPrev}
+            className="bg-gray-700 text-white px-6 py-3 typewriter-text hover:bg-gray-600 transition-colors"
+            whileHover={{
+              scale: 1.05,
+            }}
+            whileTap={{
+              scale: 0.95,
+            }}
+          >
+            ← BACK
+          </motion.button>
+          <motion.button
+            onClick={onNext}
+            className="bg-black text-white px-6 py-3 typewriter-text hover:bg-gray-800 transition-colors"
+            whileHover={{
+              scale: 1.05,
+            }}
+            whileTap={{
+              scale: 0.95,
+            }}
+          >
+            NEXT EVIDENCE →
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+```
+```components/FavoriteMomentCase.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { EvidencePhoto } from './EvidencePhoto'
+import { DetectiveNote } from './DetectiveNote'
+import { Stamp } from './Stamp'
+interface FavoriteMomentCaseProps {
+  onNext: () => void
+  onPrev: () => void
+}
+export function FavoriteMomentCase({
+  onNext,
+  onPrev,
+}: FavoriteMomentCaseProps) {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        x: 100,
+      }}
+      animate={{
+        opacity: 1,
+        x: 0,
+      }}
+      exit={{
+        opacity: 0,
+        x: -100,
+      }}
+      className="min-h-screen w-full p-8 paper-texture"
+    >
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 relative">
+          <div className="absolute top-0 right-0">
+            <Stamp text="EVIDENCE #002" rotation={-7} color="red" />
+          </div>
+          <h1 className="typewriter-text text-4xl font-bold mb-2">
+            FAVORITE MOMENT
+          </h1>
+          <div className="h-1 w-32 bg-black mb-4" />
+          <p className="typewriter-text text-sm text-gray-700">
+            Incident Report: [Specific Date/Time]
+            <br />
+            Classification: CORE MEMORY
+            <br />
+            Emotional Impact: MAXIMUM
+          </p>
+        </div>
+
+        {/* Main evidence photo */}
+        <div className="bg-gray-800 p-12 mb-8 flex justify-center relative">
+          <div className="absolute top-6 left-6">
+            <Stamp text="PRIMARY EVIDENCE" rotation={8} color="red" />
+          </div>
+          <motion.div
+            initial={{
+              scale: 0.8,
+              opacity: 0,
+            }}
+            animate={{
+              scale: 1,
+              opacity: 1,
+            }}
+            transition={{
+              delay: 0.3,
+            }}
+          >
+            <EvidencePhoto
+              label="The moment that changed everything"
+              note="This is when I knew... you're the one ❤️"
+              rotation={0}
+            />
+          </motion.div>
+        </div>
+
+        {/* Witness statement */}
+        <div className="bg-white border-4 border-black p-8 mb-8 relative coffee-stain">
+          <div className="absolute -top-3 -right-3">
+            <Stamp
+              text="WITNESS STATEMENT"
+              rotation={12}
+              color="blue"
+              size="sm"
+            />
+          </div>
+          <h3 className="typewriter-text font-bold text-xl mb-4">
+            DETECTIVE'S TESTIMONY
+          </h3>
+          <div className="handwritten-text text-lg leading-relaxed text-gray-800">
+            <p className="mb-4">
+              [Describe your favorite moment together - maybe it was a quiet
+              moment, an adventure, something funny, or something sweet. Make it
+              personal and specific.]
+            </p>
+            <p className="mb-4">
+              I remember every detail: [specific sensory details - what you saw,
+              heard, felt].
+            </p>
+            <p>
+              That's when I realized: [what you realized about her or your
+              relationship].
+            </p>
+          </div>
+          <div className="mt-6 border-t-2 border-gray-300 pt-4">
+            <p className="typewriter-text text-sm">Signed: Your Dark Knight</p>
+            <p className="typewriter-text text-xs text-gray-600">
+              Date: [Today's Date]
+            </p>
+          </div>
+        </div>
+
+        {/* Supporting evidence */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>EVIDENCE TAG A:</strong>
+            </p>
+            <p>
+              The way you [specific thing she did]. Filed under: "Reasons I'm
+              Lucky"
+            </p>
+          </DetectiveNote>
+
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>EVIDENCE TAG B:</strong>
+            </p>
+            <p>
+              Your [specific quality]. Cross-referenced with: "Perfect Human
+              Being Database"
+            </p>
+          </DetectiveNote>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between">
+          <motion.button
+            onClick={onPrev}
+            className="bg-gray-700 text-white px-6 py-3 typewriter-text hover:bg-gray-600 transition-colors"
+            whileHover={{
+              scale: 1.05,
+            }}
+            whileTap={{
+              scale: 0.95,
+            }}
+          >
+            ← BACK
+          </motion.button>
+          <motion.button
+            onClick={onNext}
+            className="bg-black text-white px-6 py-3 typewriter-text hover:bg-gray-800 transition-colors"
+            whileHover={{
+              scale: 1.05,
+            }}
+            whileTap={{
+              scale: 0.95,
+            }}
+          >
+            NEXT EVIDENCE →
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+```
+```components/FunniestMemoryCase.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { EvidencePhoto } from './EvidencePhoto'
+import { DetectiveNote } from './DetectiveNote'
+import { Stamp } from './Stamp'
+import { Smile } from 'lucide-react'
+interface FunniestMemoryCaseProps {
+  onNext: () => void
+  onPrev: () => void
+}
+export function FunniestMemoryCase({
+  onNext,
+  onPrev,
+}: FunniestMemoryCaseProps) {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        x: 100,
+      }}
+      animate={{
+        opacity: 1,
+        x: 0,
+      }}
+      exit={{
+        opacity: 0,
+        x: -100,
+      }}
+      className="min-h-screen w-full p-8 paper-texture"
+    >
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 relative">
+          <div className="absolute top-0 right-0">
+            <Stamp text="EVIDENCE #003" rotation={-5} color="red" />
+          </div>
+          <div className="flex items-center gap-4 mb-2">
+            <h1 className="typewriter-text text-4xl font-bold">
+              FUNNIEST MEMORY
+            </h1>
+            <Smile className="w-8 h-8 text-yellow-500" />
+          </div>
+          <div className="h-1 w-32 bg-black mb-4" />
+          <p className="typewriter-text text-sm text-gray-700">
+            Incident Type: COMEDY GOLD
+            <br />
+            Laughter Level: UNCONTROLLABLE
+            <br />
+            Replay Value: INFINITE
+          </p>
+        </div>
+
+        {/* Comic relief stamp */}
+        <div className="flex justify-center mb-8">
+          <motion.div
+            animate={{
+              rotate: [0, -5, 5, -5, 0],
+            }}
+            transition={{
+              duration: 0.5,
+              repeat: Infinity,
+              repeatDelay: 3,
+            }}
+          >
+            <Stamp
+              text="😂 COMIC RELIEF 😂"
+              rotation={0}
+              color="black"
+              size="lg"
+            />
+          </motion.div>
+        </div>
+
+        {/* Evidence photos */}
+        <div className="bg-gray-800 p-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <EvidencePhoto
+              label="Before the incident"
+              note="Everything was normal..."
+              rotation={-4}
+            />
+            <EvidencePhoto
+              label="The moment it happened"
+              note="And then... 😂"
+              rotation={2}
+            />
+            <EvidencePhoto
+              label="The aftermath"
+              note="We couldn't stop laughing!"
+              rotation={-3}
+            />
+          </div>
+        </div>
+
+        {/* The story */}
+        <div className="bg-yellow-50 border-4 border-yellow-400 p-8 mb-8 relative">
+          <div className="absolute -top-3 -left-3">
+            <Stamp text="HILARIOUS" rotation={-15} color="black" />
+          </div>
+          <h3 className="typewriter-text font-bold text-2xl mb-6 text-center">
+            THE INCIDENT REPORT
+          </h3>
+          <div className="handwritten-text text-lg leading-relaxed text-gray-800 space-y-4">
+            <p>
+              <strong>What Happened:</strong> [Describe the funny moment - be
+              specific and vivid. What did she do or say? What was the context?]
+            </p>
+            <p>
+              <strong>Why It Was Hilarious:</strong> [What made it so funny? The
+              timing? Her reaction? The unexpectedness?]
+            </p>
+            <p>
+              <strong>The Aftermath:</strong> [How did you both react? Did you
+              laugh until you cried? Do you still joke about it?]
+            </p>
+          </div>
+        </div>
+
+        {/* Detective annotations */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>DETECTIVE'S NOTE:</strong>
+            </p>
+            <p>
+              Your laugh is my favorite sound in the world. This moment proved
+              it. 😊
+            </p>
+          </DetectiveNote>
+
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>EVIDENCE ANALYSIS:</strong>
+            </p>
+            <p>
+              Subject displays exceptional humor and ability to make detective
+              smile uncontrollably.
+            </p>
+          </DetectiveNote>
+        </div>
+
+        {/* Quote box */}
+        <div className="bg-white border-l-8 border-yellow-500 p-6 mb-8">
+          <p className="handwritten-text text-2xl text-gray-800 italic text-center">
+            "[A funny quote from that moment or something she said]"
+          </p>
+          <p className="typewriter-text text-sm text-gray-600 text-center mt-4">
+            - Words that will live in infamy
+          </p>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between">
+          <motion.button
+            onClick={onPrev}
+            className="bg-gray-700 text-white px-6 py-3 typewriter-text hover:bg-gray-600 transition-colors"
+            whileHover={{
+              scale: 1.05,
+            }}
+            whileTap={{
+              scale: 0.95,
+            }}
+          >
+            ← BACK
+          </motion.button>
+          <motion.button
+            onClick={onNext}
+            className="bg-black text-white px-6 py-3 typewriter-text hover:bg-gray-800 transition-colors"
+            whileHover={{
+              scale: 1.05,
+            }}
+            whileTap={{
+              scale: 0.95,
+            }}
+          >
+            NEXT EVIDENCE →
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+```
+```components/SweetestGestureCase.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { EvidencePhoto } from './EvidencePhoto'
+import { DetectiveNote } from './DetectiveNote'
+import { Stamp } from './Stamp'
+import { Heart } from 'lucide-react'
+interface SweetestGestureCaseProps {
+  onNext: () => void
+  onPrev: () => void
+}
+export function SweetestGestureCase({
+  onNext,
+  onPrev,
+}: SweetestGestureCaseProps) {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        x: 100,
+      }}
+      animate={{
+        opacity: 1,
+        x: 0,
+      }}
+      exit={{
+        opacity: 0,
+        x: -100,
+      }}
+      className="min-h-screen w-full p-8 paper-texture"
+    >
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 relative">
+          <div className="absolute top-0 right-0">
+            <Stamp text="EVIDENCE #004" rotation={8} color="red" />
+          </div>
+          <div className="flex items-center gap-4 mb-2">
+            <h1 className="typewriter-text text-4xl font-bold">
+              SWEETEST GESTURE
+            </h1>
+            <Heart className="w-8 h-8 text-red-500 fill-red-500" />
+          </div>
+          <div className="h-1 w-32 bg-black mb-4" />
+          <p className="typewriter-text text-sm text-gray-700">
+            Classification: HEARTWARMING
+            <br />
+            Emotional Impact: OVERWHELMING
+            <br />
+            Status: NEVER FORGOTTEN
+          </p>
+        </div>
+
+        {/* Heart stamps decoration */}
+        <div className="flex justify-center gap-8 mb-8">
+          <Stamp text="♥" rotation={-15} color="red" size="lg" />
+          <Stamp text="♥" rotation={0} color="red" size="lg" />
+          <Stamp text="♥" rotation={15} color="red" size="lg" />
+        </div>
+
+        {/* Main evidence */}
+        <div className="bg-gradient-to-br from-pink-50 to-red-50 border-4 border-red-300 p-8 mb-8 relative">
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+            <Stamp text="PRECIOUS MEMORY" rotation={0} color="red" />
+          </div>
+
+          <div className="mt-4">
+            <h3 className="typewriter-text font-bold text-2xl mb-6 text-center text-red-800">
+              THE GESTURE THAT MELTED MY HEART
+            </h3>
+
+            <div className="handwritten-text text-lg leading-relaxed text-gray-800 space-y-4 mb-8">
+              <p>
+                <strong>What You Did:</strong> [Describe the sweet gesture she
+                made - maybe she surprised you, took care of you when you were
+                sick, remembered something important, or did something
+                thoughtful]
+              </p>
+              <p>
+                <strong>Why It Meant Everything:</strong> [Explain why this
+                gesture was so special. What did it show about her? How did it
+                make you feel?]
+              </p>
+              <p>
+                <strong>The Impact:</strong> [How did this moment change things?
+                What did you realize about her or your relationship?]
+              </p>
+            </div>
+
+            {/* Evidence photos */}
+            <div className="bg-white p-6 flex justify-center gap-8">
+              <EvidencePhoto
+                label="Evidence of kindness"
+                note="You always know exactly what I need ❤️"
+                rotation={-5}
+              />
+              <EvidencePhoto
+                label="Proof of thoughtfulness"
+                note="The little things mean everything"
+                rotation={5}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Analysis notes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>BEHAVIORAL ANALYSIS:</strong>
+            </p>
+            <p>
+              Subject consistently demonstrates extraordinary kindness, empathy,
+              and thoughtfulness. Detective's heart status: completely stolen.
+            </p>
+          </DetectiveNote>
+
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>CONCLUSION:</strong>
+            </p>
+            <p>
+              This gesture is proof that I'm the luckiest person in Gotham. Case
+              evidence: overwhelming.
+            </p>
+          </DetectiveNote>
+        </div>
+
+        {/* Love letter section */}
+        <div className="bg-white p-8 border-2 border-gray-300 shadow-lg mb-8 relative coffee-stain">
+          <div className="absolute top-4 right-4">
+            <Stamp
+              text="SEALED WITH LOVE"
+              rotation={12}
+              color="red"
+              size="sm"
+            />
+          </div>
+          <p className="handwritten-text text-xl leading-relaxed text-gray-800 text-center">
+            "You have this incredible ability to make me feel loved in the
+            simplest ways. This moment reminded me that I found someone truly
+            special. Thank you for being you."
+          </p>
+          <p className="typewriter-text text-sm text-right mt-6 text-gray-600">
+            - Your Dark Knight
+          </p>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between">
+          <motion.button
+            onClick={onPrev}
+            className="bg-gray-700 text-white px-6 py-3 typewriter-text hover:bg-gray-600 transition-colors"
+            whileHover={{
+              scale: 1.05,
+            }}
+            whileTap={{
+              scale: 0.95,
+            }}
+          >
+            ← BACK
+          </motion.button>
+          <motion.button
+            onClick={onNext}
+            className="bg-black text-white px-6 py-3 typewriter-text hover:bg-gray-800 transition-colors"
+            whileHover={{
+              scale: 1.05,
+            }}
+            whileTap={{
+              scale: 0.95,
+            }}
+          >
+            NEXT EVIDENCE →
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+```
+```components/WhyILoveYouCase.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { DetectiveNote } from './DetectiveNote'
+import { Stamp } from './Stamp'
+interface WhyILoveYouCaseProps {
+  onNext: () => void
+  onPrev: () => void
+}
+export function WhyILoveYouCase({ onNext, onPrev }: WhyILoveYouCaseProps) {
+  const reasons = [
+    {
+      id: 1,
+      text: 'Your smile lights up every room',
+      x: 20,
+      y: 15,
+    },
+    {
+      id: 2,
+      text: 'The way you laugh at my jokes',
+      x: 60,
+      y: 25,
+    },
+    {
+      id: 3,
+      text: 'Your kindness to everyone',
+      x: 15,
+      y: 45,
+    },
+    {
+      id: 4,
+      text: 'How you make me feel safe',
+      x: 70,
+      y: 50,
+    },
+    {
+      id: 5,
+      text: 'Your incredible strength',
+      x: 35,
+      y: 70,
+    },
+    {
+      id: 6,
+      text: 'The way you understand me',
+      x: 65,
+      y: 75,
+    },
+  ]
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        x: 100,
+      }}
+      animate={{
+        opacity: 1,
+        x: 0,
+      }}
+      exit={{
+        opacity: 0,
+        x: -100,
+      }}
+      className="min-h-screen w-full p-8 paper-texture"
+    >
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 relative">
+          <div className="absolute top-0 right-0">
+            <Stamp text="EVIDENCE #005" rotation={-6} color="red" />
+          </div>
+          <h1 className="typewriter-text text-4xl font-bold mb-2">
+            WHY I LOVE YOU
+          </h1>
+          <div className="h-1 w-32 bg-black mb-4" />
+          <p className="typewriter-text text-sm text-gray-700">
+            Investigation Type: COMPREHENSIVE ANALYSIS
+            <br />
+            Evidence Count: INFINITE
+            <br />
+            Conclusion: UNDENIABLE
+          </p>
+        </div>
+
+        {/* Evidence board with red strings */}
+        <div className="bg-gray-900 p-12 mb-8 relative min-h-[600px]">
+          <div className="absolute top-6 left-6">
+            <Stamp text="EVIDENCE BOARD" rotation={-8} color="red" />
+          </div>
+
+          <div className="absolute top-6 right-6">
+            <Stamp text="CONFIDENTIAL" rotation={8} color="red" />
+          </div>
+
+          {/* Center conclusion */}
+          <motion.div
+            initial={{
+              scale: 0,
+            }}
+            animate={{
+              scale: 1,
+            }}
+            transition={{
+              delay: 0.5,
+              type: 'spring',
+            }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
+          >
+            <div className="bg-red-600 text-white p-8 shadow-2xl border-4 border-white transform rotate-2">
+              <p className="typewriter-text text-3xl font-bold text-center">
+                YOU
+              </p>
+              <p className="typewriter-text text-xl text-center mt-2">
+                The Answer to Everything
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Red strings connecting to center */}
+          {reasons.map((reason, index) => (
+            <motion.div
+              key={reason.id}
+              initial={{
+                opacity: 0,
+              }}
+              animate={{
+                opacity: 1,
+              }}
+              transition={{
+                delay: 0.8 + index * 0.2,
+              }}
+            >
+              {/* Evidence card */}
+              <div
+                className="absolute bg-yellow-100 p-4 shadow-lg border-2 border-yellow-600 w-48"
+                style={{
+                  left: `${reason.x}%`,
+                  top: `${reason.y}%`,
+                  transform: `rotate(${Math.random() * 10 - 5}deg)`,
+                }}
+              >
+                <p className="handwritten-text text-sm text-gray-800">
+                  {reason.text}
+                </p>
+                <div className="w-3 h-3 bg-red-600 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+              </div>
+
+              {/* Red string to center */}
+              <svg
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                }}
+              >
+                <line
+                  x1={`${reason.x + 10}%`}
+                  y1={`${reason.y + 5}%`}
+                  x2="50%"
+                  y2="50%"
+                  stroke="#DC2626"
+                  strokeWidth="2"
+                  strokeDasharray="5,5"
+                />
+              </svg>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Detailed reasons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>REASON #1: YOUR PERSONALITY</strong>
+            </p>
+            <p>
+              [Describe what you love about her personality - her humor,
+              intelligence, kindness, etc.]
+            </p>
+          </DetectiveNote>
+
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>REASON #2: HOW YOU MAKE ME FEEL</strong>
+            </p>
+            <p>
+              [Describe how she makes you feel - safe, happy, understood, loved,
+              etc.]
+            </p>
+          </DetectiveNote>
+
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>REASON #3: YOUR STRENGTH</strong>
+            </p>
+            <p>
+              [Describe what you admire about her strength, resilience, or
+              courage]
+            </p>
+          </DetectiveNote>
+
+          <DetectiveNote pinned>
+            <p className="mb-2">
+              <strong>REASON #4: THE LITTLE THINGS</strong>
+            </p>
+            <p>
+              [Describe the small things she does that mean everything to you]
+            </p>
+          </DetectiveNote>
+        </div>
+
+        {/* Final analysis */}
+        <div className="bg-white border-4 border-black p-8 mb-8 relative">
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+            <Stamp text="FINAL ANALYSIS" rotation={0} color="black" size="lg" />
+          </div>
+          <div className="mt-4">
+            <h3 className="typewriter-text font-bold text-2xl mb-6 text-center">
+              DETECTIVE'S CONCLUSION
+            </h3>
+            <div className="handwritten-text text-lg leading-relaxed text-gray-800 space-y-4">
+              <p>
+                After extensive investigation and careful analysis of all
+                available evidence, this detective has reached an irrefutable
+                conclusion:
+              </p>
+              <p className="text-xl font-bold text-center my-6 text-red-600">
+                You are absolutely, undeniably, completely perfect for me.
+              </p>
+              <p>
+                Every piece of evidence points to the same truth: I love you
+                more than words can express. You make every day brighter, every
+                challenge easier, and every moment better.
+              </p>
+              <p>
+                This case will remain permanently open, as I plan to spend the
+                rest of my life collecting more evidence of how amazing you are.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between">
+          <motion.button
+            onClick={onPrev}
+            className="bg-gray-700 text-white px-6 py-3 typewriter-text hover:bg-gray-600 transition-colors"
+            whileHover={{
+              scale: 1.05,
+            }}
+            whileTap={{
+              scale: 0.95,
+            }}
+          >
+            ← BACK
+          </motion.button>
+          <motion.button
+            onClick={onNext}
+            className="bg-black text-white px-6 py-3 typewriter-text hover:bg-gray-800 transition-colors"
+            whileHover={{
+              scale: 1.05,
+            }}
+            whileTap={{
+              scale: 0.95,
+            }}
+          >
+            FINAL EVIDENCE →
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+```
+```components/CaseSolvedPage.tsx
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Stamp } from './Stamp'
+import { Cake, PartyPopper, Heart, Sparkles } from 'lucide-react'
+interface CaseSolvedPageProps {
+  onRestart: () => void
+}
+export function CaseSolvedPage({ onRestart }: CaseSolvedPageProps) {
+  const [showBirthdayMessage, setShowBirthdayMessage] = useState(false)
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+      }}
+      animate={{
+        opacity: 1,
+      }}
+      className="min-h-screen w-full flex items-center justify-center p-8 noir-vignette relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(to bottom, #1a1a1a 0%, #2d2d2d 100%)',
+      }}
+    >
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute"
+            initial={{
+              x: Math.random() * window.innerWidth,
+              y: -20,
+              opacity: 0,
+            }}
+            animate={{
+              y: window.innerHeight + 20,
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 5,
+            }}
+          >
+            <Sparkles
+              className="text-yellow-400"
+              size={16 + Math.random() * 16}
+            />
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="max-w-4xl w-full relative z-10">
+        {/* Case Solved Stamp */}
+        <motion.div
+          initial={{
+            scale: 0,
+            rotate: -180,
+          }}
+          animate={{
+            scale: 1,
+            rotate: 0,
+          }}
+          transition={{
+            type: 'spring',
+            duration: 1,
+          }}
+          className="flex justify-center mb-12"
+        >
+          <div className="relative">
+            <Stamp text="CASE SOLVED" rotation={-5} color="red" size="lg" />
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+              }}
+              className="absolute -inset-4 border-4 border-red-600 rounded-full opacity-50"
+            />
+          </div>
+        </motion.div>
+
+        {/* Main case file */}
+        <motion.div
+          initial={{
+            y: 50,
+            opacity: 0,
+          }}
+          animate={{
+            y: 0,
+            opacity: 1,
+          }}
+          transition={{
+            delay: 0.5,
+          }}
+          className="manila-folder p-12 shadow-2xl relative"
+        >
+          <div className="absolute top-8 right-8">
+            <Stamp text="CONFIDENTIAL" rotation={15} color="black" />
+          </div>
+
+          <div className="bg-white border-4 border-black p-8 mb-8">
+            <h1 className="typewriter-text text-5xl font-bold text-center mb-6">
+              FINAL VERDICT
+            </h1>
+
+            <div className="border-t-2 border-b-2 border-black py-6 my-6">
+              <p className="typewriter-text text-xl text-center leading-relaxed">
+                After thorough investigation of all evidence,
+                <br />
+                analyzing countless moments,
+                <br />
+                and reviewing extensive documentation,
+                <br />
+                this detective has reached a conclusion:
+              </p>
+            </div>
+
+            <motion.div
+              initial={{
+                scale: 0.8,
+              }}
+              animate={{
+                scale: 1,
+              }}
+              transition={{
+                delay: 1,
+                type: 'spring',
+              }}
+              className="bg-red-600 text-white p-8 text-center my-8"
+            >
+              <p className="typewriter-text text-3xl font-bold mb-4">
+                YOU ARE AMAZING
+              </p>
+              <p className="typewriter-text text-xl">
+                And today, we celebrate YOU!
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Birthday reveal button */}
+          {!showBirthdayMessage ? (
+            <motion.button
+              onClick={() => setShowBirthdayMessage(true)}
+              className="w-full bg-black text-white py-6 typewriter-text font-bold text-2xl hover:bg-gray-800 transition-colors flex items-center justify-center gap-4"
+              whileHover={{
+                scale: 1.02,
+              }}
+              whileTap={{
+                scale: 0.98,
+              }}
+              initial={{
+                opacity: 0,
+              }}
+              animate={{
+                opacity: 1,
+              }}
+              transition={{
+                delay: 1.5,
+              }}
+            >
+              <Cake className="w-8 h-8" />
+              REVEAL BIRTHDAY MESSAGE
+              <PartyPopper className="w-8 h-8" />
+            </motion.button>
+          ) : (
+            <AnimatePresence>
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 20,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                className="space-y-6"
+              >
+                {/* Birthday message */}
+                <div className="bg-gradient-to-br from-pink-100 to-purple-100 border-4 border-purple-400 p-8 relative overflow-hidden">
+                  <motion.div
+                    animate={{
+                      rotate: 360,
+                    }}
+                    transition={{
+                      duration: 20,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                    className="absolute top-4 right-4"
+                  >
+                    <Heart className="w-12 h-12 text-red-500 fill-red-500" />
+                  </motion.div>
+
+                  <h2 className="handwritten-text text-4xl text-center mb-6 text-purple-800">
+                    Happy Birthday, My Love! 🎂
+                  </h2>
+
+                  <div className="handwritten-text text-xl leading-relaxed text-gray-800 space-y-4">
+                    <p>
+                      Today is your special day, and I wanted to remind you of
+                      all the reasons why you're so incredibly special to me.
+                    </p>
+                    <p>
+                      Every moment with you is a gift. Every laugh, every
+                      adventure, every quiet moment together - they all add up
+                      to the most amazing story.
+                    </p>
+                    <p>
+                      You make me want to be better. You make me laugh harder.
+                      You make every day brighter just by being you.
+                    </p>
+                    <p className="text-2xl font-bold text-center text-red-600 my-6">
+                      I love you more than words can say.
+                    </p>
+                    <p>
+                      Here's to another year of adventures, laughter, and love.
+                      Here's to you - the most amazing person I know.
+                    </p>
+                  </div>
+
+                  <div className="mt-8 text-center">
+                    <p className="typewriter-text text-lg">Forever yours,</p>
+                    <p className="handwritten-text text-2xl mt-2">
+                      Your Dark Knight 🦇❤️
+                    </p>
+                  </div>
+                </div>
+
+                {/* Final stamps */}
+                <div className="flex justify-center gap-8 flex-wrap">
+                  <Stamp text="CASE CLOSED" rotation={-8} color="red" />
+                  <Stamp text="LOVE CONFIRMED" rotation={5} color="red" />
+                  <Stamp text="FOREVER" rotation={-3} color="black" />
+                </div>
+
+                {/* Restart button */}
+                <motion.button
+                  onClick={onRestart}
+                  className="w-full bg-gray-700 text-white py-4 typewriter-text hover:bg-gray-600 transition-colors"
+                  whileHover={{
+                    scale: 1.02,
+                  }}
+                  whileTap={{
+                    scale: 0.98,
+                  }}
+                >
+                  ← REVIEW CASE FILE AGAIN
+                </motion.button>
+              </motion.div>
+            </AnimatePresence>
+          )}
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+}
+
+```
+```components/SpeechBubble.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+interface SpeechBubbleProps {
+  children: React.ReactNode
+  position?:
+    | 'top-left'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'center'
+  delay?: number
+  tailDirection?: 'left' | 'right' | 'bottom'
+}
+export function SpeechBubble({
+  children,
+  position = 'top-left',
+  delay = 0,
+  tailDirection = 'bottom',
+}: SpeechBubbleProps) {
+  const positionClasses = {
+    'top-left': 'top-8 left-8',
+    'top-right': 'top-8 right-8',
+    'bottom-left': 'bottom-8 left-8',
+    'bottom-right': 'bottom-8 right-8',
+    center: 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+  }
+  const tailStyles = {
+    left: {
+      left: '-20px',
+      top: '50%',
+      transform: 'translateY(-50%) rotate(-90deg)',
+    },
+    right: {
+      right: '-20px',
+      top: '50%',
+      transform: 'translateY(-50%) rotate(90deg)',
+    },
+    bottom: {
+      bottom: '-20px',
+      left: '30px',
+      transform: 'none',
+    },
+  }
+  return (
+    <motion.div
+      initial={{
+        scale: 0,
+        opacity: 0,
+      }}
+      animate={{
+        scale: 1,
+        opacity: 1,
+      }}
+      transition={{
+        delay,
+        type: 'spring',
+        stiffness: 200,
+        damping: 15,
+      }}
+      className={`absolute ${positionClasses[position]} z-20`}
+    >
+      <div className="relative bg-white border-4 border-black rounded-2xl px-6 py-4 shadow-lg max-w-xs">
+        <div className="comic-font text-lg leading-tight text-black">
+          {children}
+        </div>
+        {/* Speech bubble tail */}
+        <div
+          className="absolute w-0 h-0"
+          style={{
+            ...tailStyles[tailDirection],
+            borderLeft: '15px solid transparent',
+            borderRight: '15px solid transparent',
+            borderTop: '20px solid white',
+            filter: 'drop-shadow(2px 2px 0px black)',
+          }}
+        />
+      </div>
+    </motion.div>
+  )
+}
+
+```
+```components/ThoughtBubble.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+interface ThoughtBubbleProps {
+  children: React.ReactNode
+  position?:
+    | 'top-left'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'center'
+  delay?: number
+}
+export function ThoughtBubble({
+  children,
+  position = 'top-right',
+  delay = 0,
+}: ThoughtBubbleProps) {
+  const positionClasses = {
+    'top-left': 'top-8 left-8',
+    'top-right': 'top-8 right-8',
+    'bottom-left': 'bottom-8 left-8',
+    'bottom-right': 'bottom-8 right-8',
+    center: 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+  }
+  return (
+    <motion.div
+      initial={{
+        scale: 0,
+        opacity: 0,
+      }}
+      animate={{
+        scale: 1,
+        opacity: 1,
+      }}
+      transition={{
+        delay,
+        type: 'spring',
+        stiffness: 200,
+        damping: 15,
+      }}
+      className={`absolute ${positionClasses[position]} z-20`}
+    >
+      <div className="relative">
+        {/* Main thought bubble - cloud shape */}
+        <div
+          className="bg-white border-4 border-black px-6 py-4 shadow-lg max-w-xs"
+          style={{
+            borderRadius: '60% 40% 40% 60% / 60% 40% 60% 40%',
+          }}
+        >
+          <div className="comic-font text-lg leading-tight text-black italic">
+            {children}
+          </div>
+        </div>
+
+        {/* Small thought circles */}
+        <div className="absolute -bottom-8 left-6">
+          <div className="w-4 h-4 bg-white border-2 border-black rounded-full" />
+        </div>
+        <div className="absolute -bottom-12 left-3">
+          <div className="w-2.5 h-2.5 bg-white border-2 border-black rounded-full" />
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+```
+```components/SoundEffect.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+interface SoundEffectProps {
+  text: string
+  color?: 'red' | 'yellow' | 'blue' | 'orange' | 'purple'
+  position?:
+    | 'top-left'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'center'
+    | 'top-center'
+  delay?: number
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  rotation?: number
+}
+export function SoundEffect({
+  text,
+  color = 'yellow',
+  position = 'top-right',
+  delay = 0,
+  size = 'lg',
+  rotation = 0,
+}: SoundEffectProps) {
+  const colorClasses = {
+    red: 'text-red-600',
+    yellow: 'text-yellow-400',
+    blue: 'text-blue-600',
+    orange: 'text-orange-500',
+    purple: 'text-purple-600',
+  }
+  const sizeClasses = {
+    sm: 'text-3xl w-20 h-20',
+    md: 'text-4xl w-28 h-28',
+    lg: 'text-5xl w-36 h-36',
+    xl: 'text-7xl w-48 h-48',
+  }
+  const positionClasses = {
+    'top-left': 'top-4 left-4',
+    'top-right': 'top-4 right-4',
+    'top-center': 'top-4 left-1/2 -translate-x-1/2',
+    'bottom-left': 'bottom-4 left-4',
+    'bottom-right': 'bottom-4 right-4',
+    center: 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+  }
+  return (
+    <motion.div
+      initial={{
+        scale: 0,
+        rotate: rotation - 20,
+        opacity: 0,
+      }}
+      animate={{
+        scale: 1,
+        rotate: rotation,
+        opacity: 1,
+      }}
+      transition={{
+        delay,
+        type: 'spring',
+        stiffness: 300,
+        damping: 15,
+      }}
+      className={`absolute ${positionClasses[position]} z-30`}
+    >
+      <div
+        className={`starburst ${colorClasses[color]} ${sizeClasses[size]} flex items-center justify-center`}
+      >
+        <span className="font-['Bangers'] font-bold text-white drop-shadow-[0_3px_6px_rgba(0,0,0,0.9)] relative z-10 text-stroke-black">
+          {text}
+        </span>
+      </div>
+    </motion.div>
+  )
+}
+
+```
+```components/pages/Page01Splash.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { SoundEffect } from '../SoundEffect'
+interface Page01SplashProps {
+  girlfriendName?: string
+}
+export function Page01Splash({
+  girlfriendName = '[Fadma]',
+}: Page01SplashProps) {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-yellow-300 via-red-400 to-blue-500 relative overflow-hidden flex items-center justify-center">
+      {/* Halftone overlay */}
+      <div className="absolute inset-0 halftone-pattern opacity-20" />
+
+      {/* Bat symbol silhouette */}
+      <motion.div
+        initial={{
+          scale: 0,
+          opacity: 0,
+        }}
+        animate={{
+          scale: 1,
+          opacity: 0.15,
+        }}
+        transition={{
+          duration: 1,
+          delay: 0.3,
+        }}
+        className="absolute inset-0 flex items-center justify-center"
+      >
+        <div className="text-[40rem] leading-none">🦇</div>
+      </motion.div>
+
+      {/* Sound effects */}
+      <SoundEffect
+        text="POW!"
+        color="yellow"
+        position="top-left"
+        delay={0.8}
+        size="md"
+        rotation={-15}
+      />
+      <SoundEffect
+        text="BAM!"
+        color="red"
+        position="top-right"
+        delay={1}
+        size="md"
+        rotation={15}
+      />
+      <SoundEffect
+        text="WHAM!"
+        color="blue"
+        position="bottom-left"
+        delay={1.2}
+        size="md"
+        rotation={-10}
+      />
+
+      {/* Main title */}
+      <div className="relative z-10 text-center px-8">
+        <motion.div
+          initial={{
+            y: -100,
+            opacity: 0,
+          }}
+          animate={{
+            y: 0,
+            opacity: 1,
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 100,
+            damping: 15,
+            delay: 0.2,
+          }}
+        >
+          <div className="comic-border bg-yellow-400 px-8 py-4 mb-6 inline-block transform -rotate-2">
+            <h2 className="font-['Bangers'] text-3xl md:text-4xl text-black tracking-wider">
+              BATMAN PRESENTS
+            </h2>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{
+            scale: 0,
+          }}
+          animate={{
+            scale: 1,
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 150,
+            damping: 20,
+            delay: 0.5,
+          }}
+        >
+          <h1 className="font-['Bangers'] text-6xl md:text-8xl lg:text-9xl text-white text-stroke-black mb-4 leading-none">
+            THE BIRTHDAY
+          </h1>
+          <h1 className="font-['Bangers'] text-6xl md:text-8xl lg:text-9xl text-white text-stroke-black leading-none">
+            CAPER!
+          </h1>
+        </motion.div>
+
+        <motion.div
+          initial={{
+            y: 100,
+            opacity: 0,
+          }}
+          animate={{
+            y: 0,
+            opacity: 1,
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 100,
+            damping: 15,
+            delay: 0.8,
+          }}
+          className="mt-8"
+        >
+          <div className="comic-border bg-white px-12 py-6 inline-block transform rotate-1">
+            <h2 className="font-['Bangers'] text-4xl md:text-5xl text-red-600 tracking-wide">
+              Starring: {girlfriendName}
+            </h2>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{
+            opacity: 0,
+          }}
+          animate={{
+            opacity: 1,
+          }}
+          transition={{
+            delay: 1.5,
+          }}
+          className="mt-12"
+        >
+          <p className="font-['Bangers'] text-2xl text-white text-stroke-black">
+            Click anywhere to begin the adventure!
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Comic book issue info */}
+      <motion.div
+        initial={{
+          opacity: 0,
+        }}
+        animate={{
+          opacity: 1,
+        }}
+        transition={{
+          delay: 1.8,
+        }}
+        className="absolute top-4 left-4 bg-black text-white px-4 py-2 border-4 border-white"
+      >
+        <p className="font-['Bangers'] text-sm">ISSUE #1</p>
+        <p className="font-['Bangers'] text-xs">{new Date().getFullYear()}</p>
+      </motion.div>
+    </div>
+  )
+}
+
+```
+```components/pages/Page02Origin.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { SpeechBubble } from '../SpeechBubble'
+import { SoundEffect } from '../SoundEffect'
+export function Page02Origin() {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-purple-400 to-pink-300 relative overflow-hidden">
+      <div className="absolute inset-0 halftone-pattern opacity-10" />
+
+      {/* Title banner */}
+      <motion.div
+        initial={{
+          y: -100,
+        }}
+        animate={{
+          y: 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 100,
+        }}
+        className="absolute top-0 left-0 right-0 bg-black text-yellow-300 py-4 px-8 border-b-8 border-white z-20"
+      >
+        <h2 className="font-['Bangers'] text-3xl md:text-4xl text-center tracking-wider">
+          CHAPTER 1: THE ORIGIN STORY
+        </h2>
+      </motion.div>
+
+      {/* Main panel */}
+      <div className="h-full flex items-center justify-center p-8 pt-24">
+        <motion.div
+          initial={{
+            scale: 0.8,
+            opacity: 0,
+            rotate: -5,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            rotate: 0,
+          }}
+          transition={{
+            delay: 0.3,
+            type: 'spring',
+          }}
+          className="comic-panel bg-gradient-to-br from-blue-100 to-purple-100 w-full max-w-4xl h-[70vh] relative"
+        >
+          {/* Scene illustration placeholder */}
+          <div className="absolute inset-8 border-4 border-dashed border-gray-400 flex items-center justify-center bg-white/50">
+            <div className="text-center">
+              <div className="text-8xl mb-4">👫</div>
+              <p className="font-['Bangers'] text-2xl text-gray-600">
+                [Illustration: The moment you first met]
+              </p>
+              <p className="font-['Permanent_Marker'] text-lg text-gray-500 mt-2">
+                Picture the scene: where you were, what you were doing
+              </p>
+            </div>
+          </div>
+
+          {/* Speech bubbles */}
+          <SpeechBubble position="top-left" delay={0.8}>
+            "Wow... who is that?"
+          </SpeechBubble>
+
+          <SpeechBubble position="top-right" delay={1.2} tailDirection="left">
+            "I can't believe how amazing she is!"
+          </SpeechBubble>
+
+          {/* Sound effect */}
+          <SoundEffect
+            text="KAPOW!"
+            color="red"
+            position="bottom-right"
+            delay={1.5}
+            size="md"
+            rotation={12}
+          />
+
+          {/* Caption box */}
+          <motion.div
+            initial={{
+              y: 50,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{
+              delay: 1.8,
+            }}
+            className="absolute bottom-4 left-4 right-4 bg-yellow-300 border-4 border-black p-4"
+          >
+            <p className="font-['Permanent_Marker'] text-lg text-black leading-tight">
+              <strong>NARRATOR:</strong> It was [DATE/TIME/PLACE]. Little did
+              our hero know, his life was about to change forever...
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+```
+```components/pages/Page03Origin.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { ThoughtBubble } from '../ThoughtBubble'
+import { SpeechBubble } from '../SpeechBubble'
+import { SoundEffect } from '../SoundEffect'
+export function Page03Origin() {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-pink-300 to-red-400 relative overflow-hidden">
+      <div className="absolute inset-0 halftone-red opacity-20" />
+
+      {/* Title banner */}
+      <motion.div
+        initial={{
+          y: -100,
+        }}
+        animate={{
+          y: 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 100,
+        }}
+        className="absolute top-0 left-0 right-0 bg-black text-yellow-300 py-4 px-8 border-b-8 border-white z-20"
+      >
+        <h2 className="font-['Bangers'] text-3xl md:text-4xl text-center tracking-wider">
+          THE FIRST WORDS...
+        </h2>
+      </motion.div>
+
+      {/* Main panel */}
+      <div className="h-full flex items-center justify-center p-8 pt-24">
+        <motion.div
+          initial={{
+            scale: 0.8,
+            opacity: 0,
+            rotate: 5,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            rotate: 0,
+          }}
+          transition={{
+            delay: 0.3,
+            type: 'spring',
+          }}
+          className="comic-panel bg-gradient-to-br from-yellow-100 to-orange-100 w-full max-w-4xl h-[70vh] relative"
+        >
+          {/* Scene illustration */}
+          <div className="absolute inset-8 border-4 border-dashed border-gray-400 flex items-center justify-center bg-white/50">
+            <div className="text-center">
+              <div className="text-8xl mb-4">💬</div>
+              <p className="font-['Bangers'] text-2xl text-gray-600">
+                [Illustration: Your first conversation]
+              </p>
+              <p className="font-['Permanent_Marker'] text-lg text-gray-500 mt-2">
+                The moment you started talking...
+              </p>
+            </div>
+          </div>
+          {/* Thought bubble */}
+          <ThoughtBubble position="top-left" delay={0.8}>
+            She's incredible... I need to talk to her!
+          </ThoughtBubble>
+          {/* Speech bubbles */}
+          <SpeechBubble position="center" delay={1.2}>
+            "Hi! I'm Mouza(your future wife)..."
+          </SpeechBubble>
+          {/* Sound effects */}
+          <SoundEffect
+            text="ZING!"
+            color="purple"
+            position="top-right"
+            delay={1.5}
+            size="md"
+            rotation={-15}
+          />
+          <SoundEffect
+            text="SPARK!"
+            color="yellow"
+            position="bottom-left"
+            delay={1.7}
+            size="sm"
+            rotation={20}
+          />
+          {/* Caption box */}
+          <motion.div
+            initial={{
+              y: 50,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{
+              delay: 2,
+            }}
+            className="absolute bottom-4 left-4 right-4 bg-red-500 border-4 border-black p-4"
+          >
+            <p className="font-['Permanent_Marker'] text-lg text-white leading-tight">
+              <strong>NARRATOR:</strong> And just like that, the connection was
+              instant. Time seemed to stop. The world faded away. It was just
+              the two of them...
+            </p>
+          </motion.div>{' '}
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+```
+```components/pages/Page04FirstDate.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { SpeechBubble } from '../SpeechBubble'
+import { SoundEffect } from '../SoundEffect'
+export function Page04FirstDate() {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-blue-400 to-cyan-300 relative overflow-hidden">
+      <div className="absolute inset-0 halftone-blue opacity-15" />
+
+      {/* Title banner */}
+      <motion.div
+        initial={{
+          y: -100,
+        }}
+        animate={{
+          y: 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 100,
+        }}
+        className="absolute top-0 left-0 right-0 bg-black text-yellow-300 py-4 px-8 border-b-8 border-white z-20"
+      >
+        <h2 className="font-['Bangers'] text-3xl md:text-4xl text-center tracking-wider">
+          CHAPTER 2: THE FIRST MISSION
+        </h2>
+      </motion.div>
+
+      {/* Main panel */}
+      <div className="h-full flex items-center justify-center p-8 pt-24">
+        <motion.div
+          initial={{
+            scale: 0.8,
+            opacity: 0,
+            x: -100,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            x: 0,
+          }}
+          transition={{
+            delay: 0.3,
+            type: 'spring',
+          }}
+          className="comic-panel bg-gradient-to-br from-pink-100 to-yellow-100 w-full max-w-4xl h-[70vh] relative"
+        >
+          {/* Scene illustration */}
+          <div className="absolute inset-8 border-4 border-dashed border-gray-400 flex items-center justify-center bg-white/50">
+            <div className="text-center">
+              <div className="text-8xl mb-4">🌟</div>
+              <p className="font-['Bangers'] text-2xl text-gray-600">
+                [Illustration: Your first date]
+              </p>
+              <p className="font-['Permanent_Marker'] text-lg text-gray-500 mt-2">
+                Where did you go? What did you do?
+              </p>
+            </div>
+          </div>
+
+          {/* Speech bubbles */}
+          <SpeechBubble position="top-left" delay={0.8}>
+            "the night i met her... the world finally made sense."
+          </SpeechBubble>
+
+          <SpeechBubble
+            position="middle-right"
+            delay={1.2}
+            tailDirection="right"
+          >
+            "i wasn't just falling... i was gone."
+          </SpeechBubble>
+
+          {/* Sound effects */}
+          <SoundEffect
+            text="BOOM!"
+            color="red"
+            position="top-right"
+            delay={1.5}
+            size="lg"
+            rotation={15}
+          />
+
+          {/* Caption box */}
+          <motion.div
+            initial={{
+              y: 50,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{
+              delay: 1.8,
+            }}
+            className="absolute bottom-4 left-4 right-4 bg-blue-500 border-4 border-black p-4"
+          >
+            <p className="font-['Permanent_Marker'] text-lg text-white leading-tight">
+              <strong>NARRATOR:</strong> I've faced danger, chaos, shadows. but nothing hit harder than the way she made me feel. thats when i knew... she wasnt just another moment.
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+```
+```components/pages/Page05FirstDate.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { ThoughtBubble } from '../ThoughtBubble'
+import { SoundEffect } from '../SoundEffect'
+export function Page05FirstDate() {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-cyan-300 to-purple-400 relative overflow-hidden">
+      <div className="absolute inset-0 halftone-pattern opacity-15" />
+
+      {/* Title banner */}
+      <motion.div
+        initial={{
+          y: -100,
+        }}
+        animate={{
+          y: 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 100,
+        }}
+        className="absolute top-0 left-0 right-0 bg-black text-yellow-300 py-4 px-8 border-b-8 border-white z-20"
+      >
+        <h2 className="font-['Bangers'] text-3xl md:text-4xl text-center tracking-wider">
+          THE MOMENT OF TRUTH...
+        </h2>
+      </motion.div>
+
+      {/* Main panel */}
+      <div className="h-full flex items-center justify-center p-8 pt-24">
+        <motion.div
+          initial={{
+            scale: 0.8,
+            opacity: 0,
+            x: 100,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            x: 0,
+          }}
+          transition={{
+            delay: 0.3,
+            type: 'spring',
+          }}
+          className="comic-panel bg-gradient-to-br from-purple-100 to-pink-100 w-full max-w-4xl h-[70vh] relative"
+        >
+          {/* Scene illustration */}
+          <div className="absolute inset-8 border-4 border-dashed border-gray-400 flex items-center justify-center bg-white/50">
+            <div className="text-center">
+              <div className="text-8xl mb-4">❤️</div>
+              <p className="font-['Bangers'] text-2xl text-gray-600">
+                [Illustration: The goodbye moment]
+              </p>
+              <p className="font-['Permanent_Marker'] text-lg text-gray-500 mt-2">
+                That moment when you didn't want to say goodbye...
+              </p>
+            </div>
+          </div>
+
+          {/* Thought bubbles */}
+          <ThoughtBubble position="top-left" delay={0.8}>
+            "I can't lose... her not now, not ever."
+          </ThoughtBubble>
+
+          <ThoughtBubble position="top-right" delay={1.2}>
+            "Because losing her isn't something i can bear."
+          </ThoughtBubble>
+
+          {/* Sound effects */}
+          <SoundEffect
+            text="THUMP!"
+            color="red"
+            position="center"
+            delay={1.5}
+            size="xl"
+            rotation={-10}
+          />
+          <motion.div
+            initial={{
+              scale: 0,
+            }}
+            animate={{
+              scale: 1,
+            }}
+            transition={{
+              delay: 1.7,
+              repeat: Infinity,
+              duration: 1,
+            }}
+            className="absolute bottom-20 right-20 text-6xl"
+          >
+            💕
+          </motion.div>
+
+          {/* Caption box */}
+          <motion.div
+            initial={{
+              y: 50,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{
+              delay: 2,
+            }}
+            className="absolute bottom-4 left-4 right-4 bg-pink-500 border-4 border-black p-4"
+          >
+            <p className="font-['Permanent_Marker'] text-lg text-white leading-tight">
+              <strong>NARRATOR:</strong> I've walked away from alot. but this time... i felt myself holding on. because losing her wasn't an option.
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+```
+```components/pages/Page06Villain.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { SpeechBubble } from '../SpeechBubble'
+import { SoundEffect } from '../SoundEffect'
+export function Page06Villain() {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-green-400 to-lime-300 relative overflow-hidden">
+      <div className="absolute inset-0 halftone-pattern opacity-15" />
+
+      {/* Title banner */}
+      <motion.div
+        initial={{
+          y: -100,
+        }}
+        animate={{
+          y: 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 100,
+        }}
+        className="absolute top-0 left-0 right-0 bg-black text-yellow-300 py-4 px-8 border-b-8 border-white z-20"
+      >
+        <h2 className="font-['Bangers'] text-3xl md:text-4xl text-center tracking-wider">
+          CHAPTER 3: DEFEATING THE VILLAINS!
+        </h2>
+      </motion.div>
+
+      {/* Main panel */}
+      <div className="h-full flex items-center justify-center p-8 pt-24">
+        <motion.div
+          initial={{
+            scale: 0.8,
+            opacity: 0,
+            rotate: -3,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            rotate: 0,
+          }}
+          transition={{
+            delay: 0.3,
+            type: 'spring',
+          }}
+          className="comic-panel bg-gradient-to-br from-orange-100 to-red-100 w-full max-w-4xl h-[70vh] relative"
+        >
+          {/* Scene illustration */}
+          <div className="absolute inset-8 border-4 border-dashed border-gray-400 flex items-center justify-center bg-white/50">
+            <div className="text-center">
+              <div className="text-8xl mb-4">🦹‍♂️💪</div>
+              <p className="font-['Bangers'] text-2xl text-gray-600">
+                [Illustration: You two as a team]
+              </p>
+              <p className="font-['Permanent_Marker'] text-lg text-gray-500 mt-2">
+                Facing challenges together...
+              </p>
+            </div>
+          </div>
+
+          {/* Speech bubbles */}
+          <SpeechBubble position="top-left" delay={0.8}>
+            "No villian, no chaos... nothing can break us."
+          </SpeechBubble>
+
+          <SpeechBubble
+            position="middle-right"
+            delay={1.2}
+            tailDirection="right"
+          >
+            "She's my teammate... my other half."
+          </SpeechBubble>
+
+          {/* Sound effects */}
+          <SoundEffect
+            text="POW!"
+            color="yellow"
+            position="top-right"
+            delay={1.5}
+            size="lg"
+            rotation={-20}
+          />
+          <SoundEffect
+            text="SMASH!"
+            color="orange"
+            position="bottom-left"
+            delay={1.7}
+            size="md"
+            rotation={15}
+          />
+
+          {/* Caption box */}
+          <motion.div
+            initial={{
+              y: 50,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{
+              delay: 2,
+            }}
+            className="absolute bottom-4 left-4 right-4 bg-green-500 border-4 border-black p-4"
+          >
+            <p className="font-['Permanent_Marker'] text-lg text-white leading-tight">
+              <strong>NARRATOR:</strong> Every challenge they faced, they
+              conquered together. Bad days, tough times, silly arguments -
+              nothing could stop this dynamic duo!
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+```
+```components/pages/Page07Villain.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { ThoughtBubble } from '../ThoughtBubble'
+import { SoundEffect } from '../SoundEffect'
+export function Page07Villain() {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-lime-300 to-yellow-400 relative overflow-hidden">
+      <div className="absolute inset-0 halftone-yellow opacity-20" />
+
+      {/* Title banner */}
+      <motion.div
+        initial={{
+          y: -100,
+        }}
+        animate={{
+          y: 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 100,
+        }}
+        className="absolute top-0 left-0 right-0 bg-black text-yellow-300 py-4 px-8 border-b-8 border-white z-20"
+      >
+        <h2 className="font-['Bangers'] text-3xl md:text-4xl text-center tracking-wider">
+          VICTORY IS OURS!
+        </h2>
+      </motion.div>
+
+      {/* Main panel */}
+      <div className="h-full flex items-center justify-center p-8 pt-24">
+        <motion.div
+          initial={{
+            scale: 0.8,
+            opacity: 0,
+            rotate: 3,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            rotate: 0,
+          }}
+          transition={{
+            delay: 0.3,
+            type: 'spring',
+          }}
+          className="comic-panel bg-gradient-to-br from-yellow-100 to-green-100 w-full max-w-4xl h-[70vh] relative"
+        >
+          {/* Scene illustration */}
+          <div className="absolute inset-8 border-4 border-dashed border-gray-400 flex items-center justify-center bg-white/50">
+            <div className="text-center">
+              <div className="text-8xl mb-4">🏆✨</div>
+              <p className="font-['Bangers'] text-2xl text-gray-600">
+                [Illustration: Celebrating victory]
+              </p>
+              <p className="font-['Permanent_Marker'] text-lg text-gray-500 mt-2">
+                Laughing together after overcoming obstacles...
+              </p>
+            </div>
+          </div>
+
+          {/* Thought bubbles */}
+          <ThoughtBubble position="top-left" delay={0.8}>
+           " She makes everything better..."
+          </ThoughtBubble>
+
+          <ThoughtBubble position="top-right" delay={1.2}>
+            "We're unstoppable together!"
+          </ThoughtBubble>
+
+          {/* Sound effects */}
+          <SoundEffect
+            text="TRIUMPH!"
+            color="yellow"
+            position="center"
+            delay={1.5}
+            size="xl"
+            rotation={5}
+          />
+
+          {/* Caption box */}
+          <motion.div
+            initial={{
+              y: 50,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{
+              delay: 2,
+            }}
+            className="absolute bottom-4 left-4 right-4 bg-yellow-400 border-4 border-black p-4"
+          >
+            <p className="font-['Permanent_Marker'] text-lg text-black leading-tight">
+              <strong>NARRATOR:</strong> With her by her side, our hero felt
+              invincible. Every inside joke, every shared laugh - they were
+              building something incredible...
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+```
+```components/pages/Page08TeamUp.tsx
+import React, { memo } from 'react'
+import { motion } from 'framer-motion'
+import { SpeechBubble } from '../SpeechBubble'
+import { SoundEffect } from '../SoundEffect'
+export function Page08TeamUp() {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-indigo-400 to-purple-500 relative overflow-hidden">
+      <div className="absolute inset-0 halftone-pattern opacity-15" />
+
+      {/* Title banner */}
+      <motion.div
+        initial={{
+          y: -100,
+        }}
+        animate={{
+          y: 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 100,
+        }}
+        className="absolute top-0 left-0 right-0 bg-black text-yellow-300 py-4 px-8 border-b-8 border-white z-20"
+      >
+        <h2 className="font-['Bangers'] text-3xl md:text-4xl text-center tracking-wider">
+          CHAPTER 4: THE DYNAMIC DUO
+        </h2>
+      </motion.div>
+
+      {/* Main panel */}
+      <div className="h-full flex items-center justify-center p-8 pt-24">
+        <motion.div
+          initial={{
+            scale: 0.8,
+            opacity: 0,
+            y: 50,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            delay: 0.3,
+            type: 'spring',
+          }}
+          className="comic-panel bg-gradient-to-br from-pink-100 to-purple-100 w-full max-w-4xl h-[70vh] relative"
+        >
+          {/* Scene illustration */}
+          <div className="absolute inset-8 border-4 border-dashed border-gray-400 flex items-center justify-center bg-white/50">
+            <div className="text-center">
+              <div className="text-8xl mb-4">🌟💫</div>
+              <p className="font-['Bangers'] text-2xl text-gray-600">
+                [Illustration: Your best moments together]
+              </p>
+              <p className="font-['Permanent_Marker'] text-lg text-gray-500 mt-2">
+                Adventures, memories, and magic...
+              </p>
+            </div>
+          </div>
+
+          {/* Speech bubbles */}
+          <SpeechBubble position="top-left" delay={0.8}>
+            "Every moment with you is an adventure!"
+          </SpeechBubble>
+
+          <SpeechBubble
+            position="middle-right"
+            delay={1.2}
+            tailDirection="right"
+          >
+            "You make ordinary days extraordinary!"
+          </SpeechBubble>
+
+          {/* Sound effects */}
+          <SoundEffect
+            text="AMAZING!"
+            color="purple"
+            position="top-right"
+            delay={1.5}
+            size="lg"
+            rotation={-15}
+          />
+
+          {/* Caption box */}
+          <motion.div
+            initial={{
+              y: 50,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{
+              delay: 2,
+            }}
+            className="absolute bottom-4 left-4 right-4 bg-purple-500 border-4 border-black p-4"
+          >
+            <p className="font-['Permanent_Marker'] text-lg text-white leading-tight">
+              <strong>NARRATOR:</strong> From quiet nights to wild adventures,
+              from silly jokes to deep conversations - they were creating a
+              lifetime of memories...
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+```
+```components/pages/Page09TeamUp.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { ThoughtBubble } from '../ThoughtBubble'
+import { SpeechBubble } from '../SpeechBubble'
+import { SoundEffect } from '../SoundEffect'
+export function Page09TeamUp() {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-purple-500 to-pink-500 relative overflow-hidden">
+      <div className="absolute inset-0 halftone-pattern opacity-15" />
+
+      {/* Title banner */}
+      <motion.div
+        initial={{
+          y: -100,
+        }}
+        animate={{
+          y: 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 100,
+        }}
+        className="absolute top-0 left-0 right-0 bg-black text-yellow-300 py-4 px-8 border-b-8 border-white z-20"
+      >
+        <h2 className="font-['Bangers'] text-3xl md:text-4xl text-center tracking-wider">
+          PARTNERS IN EVERYTHING
+        </h2>
+      </motion.div>
+
+      {/* Main panel */}
+      <div className="h-full flex items-center justify-center p-8 pt-24">
+        <motion.div
+          initial={{
+            scale: 0.8,
+            opacity: 0,
+            y: -50,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            delay: 0.3,
+            type: 'spring',
+          }}
+          className="comic-panel bg-gradient-to-br from-orange-100 to-pink-100 w-full max-w-4xl h-[70vh] relative"
+        >
+          {/* Scene illustration */}
+          <div className="absolute inset-8 border-4 border-dashed border-gray-400 flex items-center justify-center bg-white/50">
+            <div className="text-center">
+              <div className="text-8xl mb-4">👫💕</div>
+              <p className="font-['Bangers'] text-2xl text-gray-600">
+                [Illustration: Side by side]
+              </p>
+              <p className="font-['Permanent_Marker'] text-lg text-gray-500 mt-2">
+                Always there for each other...
+              </p>
+            </div>
+          </div>
+
+          {/* Thought bubble */}
+          <ThoughtBubble position="top-left" delay={0.8}>
+            I'm so lucky to have her...
+          </ThoughtBubble>
+
+          {/* Speech bubble */}
+          <SpeechBubble
+            position="middle-right"
+            delay={1.2}
+            tailDirection="right"
+          >
+            "You're my best friend and so much more!"
+          </SpeechBubble>
+
+          {/* Sound effects */}
+          <SoundEffect
+            text="LOVE!"
+            color="red"
+            position="top-right"
+            delay={1.5}
+            size="xl"
+            rotation={10}
+          />
+
+          {/* Animated hearts */}
+          {[...Array(5)].map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{
+                scale: 0,
+                y: 0,
+              }}
+              animate={{
+                scale: [0, 1, 0],
+                y: -100,
+              }}
+              transition={{
+                delay: 1.8 + i * 0.2,
+                duration: 2,
+                repeat: Infinity,
+                repeatDelay: 1,
+              }}
+              className="absolute text-4xl"
+              style={{
+                left: `${20 + i * 15}%`,
+                bottom: '20%',
+              }}
+            >
+              ❤️
+            </motion.div>
+          ))}
+
+          {/* Caption box */}
+          <motion.div
+            initial={{
+              y: 50,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{
+              delay: 2,
+            }}
+            className="absolute bottom-4 left-4 right-4 bg-pink-500 border-4 border-black p-4"
+          >
+            <p className="font-['Permanent_Marker'] text-lg text-white leading-tight">
+              <strong>NARRATOR:</strong> Through thick and thin, laughter and
+              tears, they had become more than partners - they were soulmates...
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+```
+```components/pages/Page10Reveal.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { ThoughtBubble } from '../ThoughtBubble'
+import { SoundEffect } from '../SoundEffect'
+export function Page10Reveal() {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-red-400 to-pink-500 relative overflow-hidden">
+      <div className="absolute inset-0 halftone-red opacity-20" />
+
+      {/* Title banner */}
+      <motion.div
+        initial={{
+          y: -100,
+        }}
+        animate={{
+          y: 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 100,
+        }}
+        className="absolute top-0 left-0 right-0 bg-black text-yellow-300 py-4 px-8 border-b-8 border-white z-20"
+      >
+        <h2 className="font-['Bangers'] text-3xl md:text-4xl text-center tracking-wider">
+          CHAPTER 5: THE BIG REVEAL
+        </h2>
+      </motion.div>
+
+      {/* Main panel */}
+      <div className="h-full flex items-center justify-center p-8 pt-24">
+        <motion.div
+          initial={{
+            scale: 0.8,
+            opacity: 0,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+          }}
+          transition={{
+            delay: 0.3,
+            type: 'spring',
+          }}
+          className="comic-panel bg-gradient-to-br from-red-100 to-pink-200 w-full max-w-4xl h-[70vh] relative overflow-hidden"
+        >
+          {/* Romantic background effect */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {[...Array(20)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{
+                  scale: 0,
+                  opacity: 0,
+                }}
+                animate={{
+                  scale: [0, 1.5, 0],
+                  opacity: [0, 1, 0],
+                }}
+                transition={{
+                  delay: 1 + i * 0.1,
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 2,
+                }}
+                className="absolute text-6xl"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+              >
+                ✨
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Scene illustration */}
+          <div className="absolute inset-8 border-4 border-dashed border-gray-400 flex items-center justify-center bg-white/70 z-10">
+            <div className="text-center">
+              <div className="text-9xl mb-4">💖</div>
+              <p className="font-['Bangers'] text-3xl text-gray-600">
+                [Illustration: A romantic moment]
+              </p>
+              <p className="font-['Permanent_Marker'] text-xl text-gray-500 mt-2">
+                The moment everything became clear...
+              </p>
+            </div>
+          </div>
+
+          {/* Thought bubble */}
+          <ThoughtBubble position="top-left" delay={0.8}>
+            This is it... she's the one...
+          </ThoughtBubble>
+
+          {/* Sound effects */}
+          <SoundEffect
+            text="LOVE!"
+            color="red"
+            position="top-right"
+            delay={1.5}
+            size="xl"
+            rotation={-10}
+          />
+
+          {/* Caption box */}
+          <motion.div
+            initial={{
+              y: 50,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{
+              delay: 2,
+            }}
+            className="absolute bottom-4 left-4 right-4 bg-red-600 border-4 border-black p-4 z-20"
+          >
+            <p className="font-['Permanent_Marker'] text-lg text-white leading-tight">
+              <strong>NARRATOR:</strong> In that moment, our hero realized the
+              truth he'd known all along - she wasn't just his partner in
+              adventure... she was his everything.
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+```
+```components/pages/Page11Reveal.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { SpeechBubble } from '../SpeechBubble'
+import { SoundEffect } from '../SoundEffect'
+export function Page11Reveal() {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-pink-500 to-red-600 relative overflow-hidden">
+      <div className="absolute inset-0 halftone-pattern opacity-15" />
+
+      {/* Title banner */}
+      <motion.div
+        initial={{
+          y: -100,
+        }}
+        animate={{
+          y: 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 100,
+        }}
+        className="absolute top-0 left-0 right-0 bg-black text-yellow-300 py-4 px-8 border-b-8 border-white z-20"
+      >
+        <h2 className="font-['Bangers'] text-3xl md:text-4xl text-center tracking-wider">
+          I LOVE YOU!
+        </h2>
+      </motion.div>
+
+      {/* Main panel */}
+      <div className="h-full flex items-center justify-center p-8 pt-24">
+        <motion.div
+          initial={{
+            scale: 0.8,
+            opacity: 0,
+            rotate: -2,
+          }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            rotate: 0,
+          }}
+          transition={{
+            delay: 0.3,
+            type: 'spring',
+          }}
+          className="comic-panel bg-gradient-to-br from-yellow-100 to-red-100 w-full max-w-4xl h-[70vh] relative overflow-hidden"
+        >
+          {/* Giant heart background */}
+          <motion.div
+            initial={{
+              scale: 0,
+            }}
+            animate={{
+              scale: 1,
+            }}
+            transition={{
+              delay: 0.8,
+              type: 'spring',
+              stiffness: 100,
+            }}
+            className="absolute inset-0 flex items-center justify-center opacity-20"
+          >
+            <div className="text-[30rem] leading-none">❤️</div>
+          </motion.div>
+
+          {/* Scene illustration */}
+          <div className="absolute inset-8 border-4 border-dashed border-gray-400 flex items-center justify-center bg-white/70 z-10">
+            <div className="text-center">
+              <motion.div
+                animate={{
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, -5, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                }}
+                className="text-9xl mb-4"
+              >
+                💕
+              </motion.div>
+              <p className="font-['Bangers'] text-3xl text-gray-600">
+                [Illustration: Expressing love]
+              </p>
+              <p className="font-['Permanent_Marker'] text-xl text-gray-500 mt-2">
+                The three words that mean everything...
+              </p>
+            </div>
+          </div>
+
+          {/* Speech bubble */}
+          <SpeechBubble position="center" delay={1.2}>
+            "I love you more than words can say!"
+          </SpeechBubble>
+
+          {/* Sound effects */}
+          <SoundEffect
+            text="HEART!"
+            color="red"
+            position="top-left"
+            delay={1.5}
+            size="lg"
+            rotation={-20}
+          />
+          <SoundEffect
+            text="BOOM!"
+            color="purple"
+            position="bottom-right"
+            delay={1.7}
+            size="lg"
+            rotation={15}
+          />
+
+          {/* Floating hearts */}
+          {[...Array(10)].map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{
+                y: 100,
+                opacity: 0,
+              }}
+              animate={{
+                y: -100,
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                delay: 2 + i * 0.3,
+                duration: 3,
+                repeat: Infinity,
+                repeatDelay: 2,
+              }}
+              className="absolute text-5xl z-20"
+              style={{
+                left: `${10 + i * 9}%`,
+                bottom: 0,
+              }}
+            >
+              💖
+            </motion.div>
+          ))}
+
+          {/* Caption box */}
+          <motion.div
+            initial={{
+              y: 50,
+              opacity: 0,
+            }}
+            animate={{
+              y: 0,
+              opacity: 1,
+            }}
+            transition={{
+              delay: 2.2,
+            }}
+            className="absolute bottom-4 left-4 right-4 bg-red-600 border-4 border-black p-4 z-20"
+          >
+            <p className="font-['Permanent_Marker'] text-lg text-white leading-tight text-center">
+              <strong>NARRATOR:</strong> Three simple words. Infinite meaning. A
+              love story for the ages...
+            </p>
+          </motion.div>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+```
+```components/pages/Page12Final.tsx
+import React from 'react'
+import { motion } from 'framer-motion'
+import { SoundEffect } from '../SoundEffect'
+import { Cake, PartyPopper, Heart, Sparkles } from 'lucide-react'
+interface Page12FinalProps {
+  girlfriendName?: string
+}
+export function Page12Final({
+  girlfriendName = '[Fadma]',
+}: Page12FinalProps) {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 relative overflow-hidden">
+      {/* Animated background sparkles */}
+      <div className="absolute inset-0">
+        {[...Array(30)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute"
+            initial={{
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              scale: 0,
+            }}
+            animate={{
+              scale: [0, 1, 0],
+              rotate: 360,
+            }}
+            transition={{
+              duration: 2 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 3,
+            }}
+          >
+            <Sparkles className="text-white" size={20 + Math.random() * 20} />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Halftone overlay */}
+      <div className="absolute inset-0 halftone-pattern opacity-10" />
+
+      {/* Sound effects */}
+      <SoundEffect
+        text="HAPPY!"
+        color="yellow"
+        position="top-left"
+        delay={0.5}
+        size="lg"
+        rotation={-15}
+      />
+      <SoundEffect
+        text="BIRTHDAY!"
+        color="red"
+        position="top-right"
+        delay={0.7}
+        size="lg"
+        rotation={15}
+      />
+
+      {/* Main content */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-center px-8">
+        {/* Birthday cake icon */}
+        <motion.div
+          initial={{
+            scale: 0,
+            rotate: -180,
+          }}
+          animate={{
+            scale: 1,
+            rotate: 0,
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 150,
+            damping: 15,
+            delay: 0.3,
+          }}
+          className="mb-8"
+        >
+          <div className="comic-border bg-white p-8 rounded-full">
+            <Cake className="w-24 h-24 text-pink-500" />
+          </div>
+        </motion.div>
+
+        {/* Main birthday message */}
+        <motion.div
+          initial={{
+            scale: 0,
+          }}
+          animate={{
+            scale: 1,
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 150,
+            damping: 20,
+            delay: 0.6,
+          }}
+          className="text-center mb-8"
+        >
+          <h1 className="font-['Bangers'] text-7xl md:text-9xl text-white text-stroke-black mb-4 leading-none">
+            HAPPY
+          </h1>
+          <h1 className="font-['Bangers'] text-7xl md:text-9xl text-white text-stroke-black leading-none">
+            BIRTHDAY!
+          </h1>
+        </motion.div>
+
+        {/* Name banner */}
+        <motion.div
+          initial={{
+            y: 100,
+            opacity: 0,
+          }}
+          animate={{
+            y: 0,
+            opacity: 1,
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 100,
+            damping: 15,
+            delay: 1,
+          }}
+          className="mb-8"
+        >
+          <div className="comic-border bg-yellow-400 px-12 py-6 transform -rotate-1">
+            <h2 className="font-['Bangers'] text-5xl md:text-6xl text-black tracking-wide">
+              {girlfriendName}
+            </h2>
+          </div>
+        </motion.div>
+
+        {/* Birthday message */}
+        <motion.div
+          initial={{
+            y: 50,
+            opacity: 0,
+          }}
+          animate={{
+            y: 0,
+            opacity: 1,
+          }}
+          transition={{
+            delay: 1.3,
+          }}
+          className="comic-border bg-white px-8 py-6 max-w-2xl mb-8"
+        >
+          <p className="font-['Permanent_Marker'] text-xl md:text-2xl text-center leading-relaxed text-gray-800">
+            You're my hero, my partner in crime, and my favorite person in the
+            whole world. Here's to another year of adventures, laughter, and
+            love!
+          </p>
+        </motion.div>
+
+        {/* Signature */}
+        <motion.div
+          initial={{
+            opacity: 0,
+          }}
+          animate={{
+            opacity: 1,
+          }}
+          transition={{
+            delay: 1.6,
+          }}
+          className="text-center"
+        >
+          <p className="font-['Permanent_Marker'] text-2xl text-white text-stroke-black mb-2">
+            With all my love,
+          </p>
+          <p className="font-['Bangers'] text-3xl text-white text-stroke-black">
+            Your Dark Knight 🦇❤️
+          </p>
+        </motion.div>
+
+        {/* Fireworks effect */}
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{
+              scale: 0,
+              opacity: 0,
+            }}
+            animate={{
+              scale: [0, 2, 0],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              delay: 2 + i * 0.2,
+              duration: 1.5,
+              repeat: Infinity,
+              repeatDelay: 3,
+            }}
+            className="absolute text-6xl"
+            style={{
+              left: `${15 + i * 12}%`,
+              top: `${20 + (i % 2) * 30}%`,
+            }}
+          >
+            🎆
+          </motion.div>
+        ))}
+
+        {/* Party poppers */}
+        <motion.div
+          animate={{
+            rotate: [0, -10, 10, 0],
+          }}
+          transition={{
+            duration: 0.5,
+            repeat: Infinity,
+            repeatDelay: 2,
+          }}
+          className="absolute bottom-8 left-8"
+        >
+          <PartyPopper className="w-16 h-16 text-yellow-300" />
+        </motion.div>
+        <motion.div
+          animate={{
+            rotate: [0, 10, -10, 0],
+          }}
+          transition={{
+            duration: 0.5,
+            repeat: Infinity,
+            repeatDelay: 2,
+            delay: 0.3,
+          }}
+          className="absolute bottom-8 right-8"
+        >
+          <PartyPopper className="w-16 h-16 text-pink-300" />
+        </motion.div>
+
+        {/* Restart hint */}
+        <motion.div
+          initial={{
+            opacity: 0,
+          }}
+          animate={{
+            opacity: 1,
+          }}
+          transition={{
+            delay: 3,
+          }}
+          className="absolute bottom-4 left-1/2 -translate-x-1/2"
+        >
+          <p className="font-['Bangers'] text-lg text-white text-stroke-black">
+            Click to restart the adventure!
+          </p>
+        </motion.div>
+      </div>
+
+      {/* THE END banner */}
+      <motion.div
+        initial={{
+          scale: 0,
+          rotate: -180,
+        }}
+        animate={{
+          scale: 1,
+          rotate: 0,
+        }}
+        transition={{
+          delay: 2.5,
+          type: 'spring',
+        }}
+        className="absolute top-8 right-8 comic-border bg-black text-yellow-300 px-6 py-3"
+      >
+        <p className="font-['Bangers'] text-2xl">THE END... FOR NOW! 💕</p>
+      </motion.div>
+    </div>
+  )
+}
+
+```
